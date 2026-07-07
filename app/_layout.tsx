@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
+import { useSession } from "@/lib/session/useSession";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,16 +26,30 @@ export default function RootLayout() {
     Inter_600SemiBold,
   });
 
+  const hydrated = useSession((state) => state.hydrated);
+  const hasOnboarded = useSession((state) => state.hasOnboarded);
+  const enteredApp = useSession((state) => state.enteredApp);
+  const hydrate = useSession((state) => state.hydrate);
+
   useEffect(() => {
-    if (fontsLoaded) {
+    hydrate();
+  }, [hydrate]);
+
+  const ready = fontsLoaded && hydrated;
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [ready]);
 
-  if (!fontsLoaded) {
+  if (!ready) {
     return null;
   }
 
+  // The guards decide the cold-start landing: onboarding on first launch,
+  // otherwise auth. Tabs are reachable only after passing auth this session,
+  // so every launch lands on onboarding or sign-in — never straight on tabs.
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
@@ -44,9 +59,15 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: colors.background },
         }}
       >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(onboarding)" />
-        <Stack.Screen name="(auth)" />
+        <Stack.Protected guard={!hasOnboarded}>
+          <Stack.Screen name="(onboarding)" />
+        </Stack.Protected>
+        <Stack.Protected guard={hasOnboarded && !enteredApp}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+        <Stack.Protected guard={enteredApp}>
+          <Stack.Screen name="(tabs)" />
+        </Stack.Protected>
       </Stack>
     </SafeAreaProvider>
   );

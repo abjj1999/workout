@@ -1,14 +1,18 @@
+import { type ReactNode } from "react";
 import { Pressable, Text, type PressableProps } from "react-native";
 
 type ButtonProps = Omit<PressableProps, "style"> & {
   label: string;
   variant?: "primary" | "ghost";
+  /** Optional leading element (e.g. an icon) rendered before the label. */
+  icon?: ReactNode;
   className?: string;
 };
 
 export function Button({
   label,
   variant = "primary",
+  icon,
   disabled,
   className = "",
   ...props
@@ -18,7 +22,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityState={{ disabled: disabled === true }}
       disabled={disabled}
-      className={`h-12 min-h-[48px] flex-row items-center justify-center rounded-btn px-6 ${
+      className={`h-12 min-h-[48px] flex-row items-center justify-center gap-2 rounded-btn px-6 ${
         variant === "primary" ? "bg-accent" : "border border-border"
       } ${disabled ? "opacity-40" : ""} ${className}`}
       style={({ pressed }) =>
@@ -26,6 +30,7 @@ export function Button({
       }
       {...props}
     >
+      {icon}
       <Text className="font-body-semibold text-body text-text-primary">
         {label}
       </Text>
