@@ -2,15 +2,15 @@ import { Text } from "react-native";
 
 import { Card, Screen } from "@/components/ui";
 
-export default function TodayScreen() {
+export default function ExercisesScreen() {
   return (
     <Screen>
       <Text className="font-display text-title uppercase text-text-primary">
-        Today
+        Exercises
       </Text>
       <Card className="mt-4">
         <Text className="font-body text-body text-text-secondary">
-          Your workout for today will show up here.
+          The exercise library will show up here.
         </Text>
       </Card>
     </Screen>

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "bench-press",
+    "name": "Barbell Bench Press",
+    "muscleGroups": ["chest", "triceps"],
+    "subRegions": ["mid chest"],
+    "thumbnailUrl": "https://picsum.photos/seed/bench-press/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+  },
+  {
+    "id": "incline-db-press",
+    "name": "Incline Dumbbell Press",
+    "muscleGroups": ["chest", "shoulders"],
+    "subRegions": ["upper chest"],
+    "thumbnailUrl": "https://picsum.photos/seed/incline-db-press/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+  },
+  {
+    "id": "cable-fly",
+    "name": "Cable Fly",
+    "muscleGroups": ["chest"],
+    "subRegions": ["mid chest", "inner chest"],
+    "thumbnailUrl": "https://picsum.photos/seed/cable-fly/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+  },
+  {
+    "id": "overhead-press",
+    "name": "Overhead Press",
+    "muscleGroups": ["shoulders", "triceps"],
+    "subRegions": ["front delt"],
+    "thumbnailUrl": "https://picsum.photos/seed/overhead-press/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+  },
+  {
+    "id": "lateral-raise",
+    "name": "Dumbbell Lateral Raise",
+    "muscleGroups": ["shoulders"],
+    "subRegions": ["side delt"],
+    "thumbnailUrl": "https://picsum.photos/seed/lateral-raise/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+  },
+  {
+    "id": "rear-delt-fly",
+    "name": "Rear Delt Fly",
+    "muscleGroups": ["shoulders", "back"],
+    "subRegions": ["rear delt"],
+    "thumbnailUrl": "https://picsum.photos/seed/rear-delt-fly/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+  },
+  {
+    "id": "triceps-pushdown",
+    "name": "Triceps Pushdown",
+    "muscleGroups": ["triceps"],
+    "subRegions": ["lateral head"],
+    "thumbnailUrl": "https://picsum.photos/seed/triceps-pushdown/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
+  },
+  {
+    "id": "skull-crusher",
+    "name": "Skull Crusher",
+    "muscleGroups": ["triceps"],
+    "subRegions": ["long head"],
+    "thumbnailUrl": "https://picsum.photos/seed/skull-crusher/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+  },
+  {
+    "id": "pull-up",
+    "name": "Pull-Up",
+    "muscleGroups": ["back", "biceps"],
+    "subRegions": ["lats"],
+    "thumbnailUrl": "https://picsum.photos/seed/pull-up/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4"
+  },
+  {
+    "id": "barbell-row",
+    "name": "Barbell Row",
+    "muscleGroups": ["back", "biceps"],
+    "subRegions": ["mid back", "lats"],
+    "thumbnailUrl": "https://picsum.photos/seed/barbell-row/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+  },
+  {
+    "id": "lat-pulldown",
+    "name": "Lat Pulldown",
+    "muscleGroups": ["back", "biceps"],
+    "subRegions": ["lats"],
+    "thumbnailUrl": "https://picsum.photos/seed/lat-pulldown/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+  },
+  {
+    "id": "seated-cable-row",
+    "name": "Seated Cable Row",
+    "muscleGroups": ["back"],
+    "subRegions": ["mid back"],
+    "thumbnailUrl": "https://picsum.photos/seed/seated-cable-row/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+  },
+  {
+    "id": "barbell-curl",
+    "name": "Barbell Curl",
+    "muscleGroups": ["biceps"],
+    "subRegions": ["long head", "short head"],
+    "thumbnailUrl": "https://picsum.photos/seed/barbell-curl/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+  },
+  {
+    "id": "hammer-curl",
+    "name": "Hammer Curl",
+    "muscleGroups": ["biceps", "forearms"],
+    "subRegions": ["brachialis"],
+    "thumbnailUrl": "https://picsum.photos/seed/hammer-curl/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+  },
+  {
+    "id": "back-squat",
+    "name": "Barbell Back Squat",
+    "muscleGroups": ["quads", "glutes"],
+    "subRegions": ["quads", "glute max"],
+    "thumbnailUrl": "https://picsum.photos/seed/back-squat/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+  },
+  {
+    "id": "romanian-deadlift",
+    "name": "Romanian Deadlift",
+    "muscleGroups": ["hamstrings", "glutes"],
+    "subRegions": ["hamstrings", "glute max"],
+    "thumbnailUrl": "https://picsum.photos/seed/romanian-deadlift/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+  },
+  {
+    "id": "leg-press",
+    "name": "Leg Press",
+    "muscleGroups": ["quads", "glutes"],
+    "subRegions": ["quads"],
+    "thumbnailUrl": "https://picsum.photos/seed/leg-press/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
+  },
+  {
+    "id": "leg-curl",
+    "name": "Seated Leg Curl",
+    "muscleGroups": ["hamstrings"],
+    "subRegions": ["hamstrings"],
+    "thumbnailUrl": "https://picsum.photos/seed/leg-curl/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"
+  },
+  {
+    "id": "calf-raise",
+    "name": "Standing Calf Raise",
+    "muscleGroups": ["calves"],
+    "subRegions": ["gastrocnemius"],
+    "thumbnailUrl": "https://picsum.photos/seed/calf-raise/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4"
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "muscleGroups": ["core"],
+    "subRegions": ["abs", "obliques"],
+    "thumbnailUrl": "https://picsum.photos/seed/plank/160/160",
+    "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+  }
+]
