@@ -1,10 +1,10 @@
 import { Text } from "react-native";
 
-import { Card, ListRow, Screen } from "@/components/ui";
+import { Button, Card, ListRow, Screen } from "@/components/ui";
 import { useAuth } from "@/lib/auth/useAuth";
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   return (
     <Screen>
@@ -18,6 +18,12 @@ export default function ProfileScreen() {
           showChevron
         />
       </Card>
+      <Button
+        variant="ghost"
+        label="Sign Out"
+        onPress={() => signOut()}
+        className="mt-6"
+      />
     </Screen>
   );
 }

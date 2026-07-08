@@ -1,12 +1,12 @@
 import "../global.css";
 
+import { ClerkProvider, useAuth } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
 import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
-import { ClerkProvider } from "@clerk/expo";
-
 import { Oswald_700Bold } from "@expo-google-fonts/oswald";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -21,7 +21,28 @@ import { useSession } from "@/lib/session/useSession";
 
 SplashScreen.preventAutoHideAsync();
 
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+
+if (!publishableKey) {
+  throw new Error(
+    "Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY. Add it to .env.local (see Clerk Dashboard → API keys).",
+  );
+}
+
 export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <SafeAreaProvider>
+          <StatusBar style="light" />
+          <RootNavigator />
+        </SafeAreaProvider>
+      </ClerkProvider>
+    </GestureHandlerRootView>
+  );
+}
+
+function RootNavigator() {
   const [fontsLoaded] = useFonts({
     Oswald_700Bold,
     Inter_400Regular,
@@ -31,14 +52,16 @@ export default function RootLayout() {
 
   const hydrated = useSession((state) => state.hydrated);
   const hasOnboarded = useSession((state) => state.hasOnboarded);
-  const enteredApp = useSession((state) => state.enteredApp);
   const hydrate = useSession((state) => state.hydrate);
+  const { isLoaded: authLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
-  const ready = fontsLoaded && hydrated;
+  // Hold the splash screen until fonts, the onboarding flag, and Clerk's
+  // restored session state are all known, so the first frame is the right one.
+  const ready = fontsLoaded && hydrated && authLoaded;
 
   useEffect(() => {
     if (ready) {
@@ -50,30 +73,26 @@ export default function RootLayout() {
     return null;
   }
 
-  // The guards decide the cold-start landing: onboarding on first launch,
-  // otherwise auth. Tabs are reachable only after passing auth this session,
-  // so every launch lands on onboarding or sign-in — never straight on tabs.
+  const signedIn = isSignedIn === true;
+
+  // Cold-start landing: onboarding on first launch, then auth until Clerk
+  // has an active session, then the app. Signing out flips the guards back.
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        >
-          <Stack.Protected guard={!hasOnboarded}>
-            <Stack.Screen name="(onboarding)" />
-          </Stack.Protected>
-          <Stack.Protected guard={hasOnboarded && !enteredApp}>
-            <Stack.Screen name="(auth)" />
-          </Stack.Protected>
-          <Stack.Protected guard={enteredApp}>
-            <Stack.Screen name="(tabs)" />
-          </Stack.Protected>
-        </Stack>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
+    >
+      <Stack.Protected guard={!hasOnboarded && !signedIn}>
+        <Stack.Screen name="(onboarding)" />
+      </Stack.Protected>
+      <Stack.Protected guard={hasOnboarded && !signedIn}>
+        <Stack.Screen name="(auth)" />
+      </Stack.Protected>
+      <Stack.Protected guard={signedIn}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
+    </Stack>
   );
 }
