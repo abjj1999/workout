@@ -8,9 +8,11 @@ type ScreenProps = {
   scroll?: boolean;
 };
 
-// Every screen renders inside this: safe area, background token,
-// 16px screen padding, and 96px bottom padding so content clears
-// the floating tab bar.
+// Every tab screen renders inside this: safe area, background token, and
+// 16px screen padding. Clearance for the floating tab bar is reserved
+// structurally by the tab navigator's sceneStyle, so the scroll viewport
+// already ends above the bar — only a small end-of-scroll breathing space
+// is added here.
 export function Screen({ children, scroll = true }: ScreenProps) {
   if (!scroll) {
     return (
@@ -18,7 +20,7 @@ export function Screen({ children, scroll = true }: ScreenProps) {
         edges={["top", "left", "right"]}
         className="flex-1 bg-background"
       >
-        <View className="flex-1 px-4 pb-24 pt-4">{children}</View>
+        <View className="flex-1 px-4 pb-4 pt-4">{children}</View>
       </SafeAreaView>
     );
   }
@@ -29,7 +31,7 @@ export function Screen({ children, scroll = true }: ScreenProps) {
     >
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-4 pt-4 pb-24"
+        contentContainerClassName="px-4 pt-4 pb-6"
         showsVerticalScrollIndicator={false}
       >
         {children}

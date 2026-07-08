@@ -4,6 +4,7 @@ import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
+import { TAB_BAR_HEIGHT, TAB_BAR_MARGIN } from "@/constants/layout";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
@@ -26,8 +27,11 @@ export function FloatingTabBar({
 
   return (
     <View
-      className="absolute left-4 right-4 h-16 flex-row items-center rounded-full border border-border bg-surface px-2"
-      style={{ bottom: insets.bottom + 16 }}
+      className="absolute left-4 right-4 flex-row items-center rounded-full border border-border bg-surface px-2"
+      style={{
+        bottom: insets.bottom + TAB_BAR_MARGIN,
+        height: TAB_BAR_HEIGHT,
+      }}
     >
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];

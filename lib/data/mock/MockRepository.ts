@@ -1,3 +1,4 @@
+import { toDateKey } from "../../dates";
 import type { ExerciseRepository, WorkoutRepository } from "../repositories";
 import type { Exercise, Workout, WorkoutExercise, WorkoutSet } from "../types";
 import exercisesJson from "./exercises.json";
@@ -40,6 +41,17 @@ export class MockWorkoutRepository implements WorkoutRepository {
     );
   }
 
+  async getWorkoutByDate(dateKey: string): Promise<Workout | null> {
+    const matches = mockStore
+      .getState()
+      .workouts.filter((w) => toDateKey(new Date(w.date)) === dateKey);
+    return (
+      matches.find((w) => w.finishedAt === null) ??
+      matches[matches.length - 1] ??
+      null
+    );
+  }
+
   async getHistory(): Promise<Workout[]> {
     return mockStore
       .getState()
@@ -70,6 +82,7 @@ export class MockWorkoutRepository implements WorkoutRepository {
       id: nextId("workout"),
       date: new Date().toISOString(),
       finishedAt: null,
+      note: null,
     };
     mockStore.setState((state) => ({
       workouts: [...state.workouts, workout],
@@ -82,6 +95,17 @@ export class MockWorkoutRepository implements WorkoutRepository {
     mockStore.setState((state) => ({
       workouts: state.workouts.map((w) =>
         w.id === workoutId ? { ...w, finishedAt } : w,
+      ),
+    }));
+    const workout = await this.getById(workoutId);
+    if (!workout) throw new Error(`Workout not found: ${workoutId}`);
+    return workout;
+  }
+
+  async updateWorkoutNote(workoutId: string, note: string): Promise<Workout> {
+    mockStore.setState((state) => ({
+      workouts: state.workouts.map((w) =>
+        w.id === workoutId ? { ...w, note } : w,
       ),
     }));
     const workout = await this.getById(workoutId);
@@ -149,8 +173,21 @@ export class MockWorkoutRepository implements WorkoutRepository {
   }
 
   async deleteSet(setId: string): Promise<void> {
-    mockStore.setState((state) => ({
-      sets: state.sets.filter((set) => set.id !== setId),
-    }));
+    mockStore.setState((state) => {
+      const target = state.sets.find((set) => set.id === setId);
+      if (!target) return {};
+      // Renumber the remaining sets of the same exercise so set numbers
+      // stay sequential after a deletion.
+      let nextNumber = 0;
+      return {
+        sets: state.sets
+          .filter((set) => set.id !== setId)
+          .map((set) =>
+            set.workoutExerciseId === target.workoutExerciseId
+              ? { ...set, setNumber: ++nextNumber }
+              : set,
+          ),
+      };
+    });
   }
 }

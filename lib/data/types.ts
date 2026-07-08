@@ -13,6 +13,8 @@ export interface Workout {
   date: string;
   /** ISO date-time the workout was finished, or null while in progress. */
   finishedAt: string | null;
+  /** Free-form note the user attaches to the session. */
+  note: string | null;
 }
 
 export interface WorkoutExercise {
