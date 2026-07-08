@@ -1,3 +1,5 @@
+import { useAuth as useClerkAuth, useUser } from "@clerk/expo";
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -8,24 +10,35 @@ export interface AuthState {
   user: AuthUser | null;
   isLoaded: boolean;
   isSignedIn: boolean;
-  signIn: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
-const STUB_USER: AuthUser = {
-  id: "user_1",
-  email: "abdullah@example.com",
-  name: "Abdullah",
-};
-
-// Stub matching the shape screens will need. Swap the internals for Clerk
-// later; consumers only depend on AuthState.
+// Thin adapter over Clerk so screens keep consuming one stable interface
+// instead of Clerk's hooks directly.
 export function useAuth(): AuthState {
+  const { isLoaded, isSignedIn, signOut } = useClerkAuth();
+  const { user } = useUser();
+
+  const email =
+    user?.primaryEmailAddress?.emailAddress ??
+    user?.emailAddresses?.[0]?.emailAddress ??
+    "";
+
   return {
-    user: STUB_USER,
-    isLoaded: true,
-    isSignedIn: true,
-    signIn: async () => {},
-    signOut: async () => {},
+    user: user
+      ? {
+          id: user.id,
+          email,
+          name:
+            user.fullName ??
+            user.firstName ??
+            (email ? email.split("@")[0] : "Athlete"),
+        }
+      : null,
+    isLoaded,
+    isSignedIn: isSignedIn === true,
+    signOut: async () => {
+      await signOut();
+    },
   };
 }

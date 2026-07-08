@@ -3,16 +3,15 @@ import { create } from "zustand";
 
 const ONBOARDING_KEY = "onboarding_complete_v1";
 
+// Onboarding-only session state. Authentication state lives in Clerk
+// (see lib/auth/useAuth).
 interface SessionState {
   /** True once the persisted onboarding flag has been read from storage. */
   hydrated: boolean;
   /** Persisted: the user has finished (or skipped) onboarding at least once. */
   hasOnboarded: boolean;
-  /** Session-only: the user has passed the auth screens this launch. */
-  enteredApp: boolean;
   hydrate: () => Promise<void>;
   completeOnboarding: () => void;
-  enterApp: () => void;
   /** Testing helper: clears the flag so the next launch shows onboarding. */
   resetOnboarding: () => Promise<void>;
 }
@@ -20,7 +19,6 @@ interface SessionState {
 export const useSession = create<SessionState>((set) => ({
   hydrated: false,
   hasOnboarded: false,
-  enteredApp: false,
   hydrate: async () => {
     try {
       const value = await AsyncStorage.getItem(ONBOARDING_KEY);
@@ -36,9 +34,8 @@ export const useSession = create<SessionState>((set) => ({
     set({ hasOnboarded: true });
     AsyncStorage.setItem(ONBOARDING_KEY, "true").catch(() => {});
   },
-  enterApp: () => set({ enteredApp: true }),
   resetOnboarding: async () => {
-    set({ hasOnboarded: false, enteredApp: false });
+    set({ hasOnboarded: false });
     try {
       await AsyncStorage.removeItem(ONBOARDING_KEY);
     } catch {
