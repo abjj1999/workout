@@ -5,6 +5,8 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
 } from "@expo-google-fonts/inter";
+import { ClerkProvider } from "@clerk/expo";
+
 import { Oswald_700Bold } from "@expo-google-fonts/oswald";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -55,22 +57,22 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      >
-        <Stack.Protected guard={!hasOnboarded}>
-          <Stack.Screen name="(onboarding)" />
-        </Stack.Protected>
-        <Stack.Protected guard={hasOnboarded && !enteredApp}>
-          <Stack.Screen name="(auth)" />
-        </Stack.Protected>
-        <Stack.Protected guard={enteredApp}>
-          <Stack.Screen name="(tabs)" />
-        </Stack.Protected>
-      </Stack>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Protected guard={!hasOnboarded}>
+            <Stack.Screen name="(onboarding)" />
+          </Stack.Protected>
+          <Stack.Protected guard={hasOnboarded && !enteredApp}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
+          <Stack.Protected guard={enteredApp}>
+            <Stack.Screen name="(tabs)" />
+          </Stack.Protected>
+        </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

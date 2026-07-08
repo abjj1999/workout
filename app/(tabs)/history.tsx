@@ -45,11 +45,7 @@ export default function HistoryScreen() {
             pressed ? { transform: [{ scale: 0.98 }] } : undefined
           }
         >
-          <Ionicons
-            name="chevron-back"
-            size={22}
-            color={colors.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
         </Pressable>
         <View className="flex-1 items-center gap-1">
           <Text className="font-display text-body text-text-primary">
