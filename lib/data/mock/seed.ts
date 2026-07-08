@@ -47,6 +47,7 @@ function buildWorkout(
     finishedAt: finished
       ? new Date(started.getTime() + 65 * 60 * 1000).toISOString()
       : null,
+    note: null,
   };
   data.workouts.push(workout);
 
@@ -97,23 +98,17 @@ const legDay = (): ExercisePlan[] => [
 ];
 
 /**
- * Seeds a partially completed push workout dated today, plus three weeks
- * of finished push/pull/legs history.
+ * Seeds three weeks of finished push/pull/legs history. Today is left
+ * empty on purpose: the user starts a fresh session from the Today tab.
  */
 export function createSeedData(): MockData {
   const data: MockData = { workouts: [], workoutExercises: [], sets: [] };
 
-  // Today's push workout, mid-session: earlier sets done, later ones pending.
-  buildWorkout(data, 0, false, [
-    { exerciseId: "bench-press", sets: sets(185, 8, 4, 3) },
-    { exerciseId: "incline-db-press", sets: sets(65, 10, 3, 1) },
-    { exerciseId: "overhead-press", sets: sets(105, 8, 3, 0) },
-    { exerciseId: "triceps-pushdown", sets: sets(50, 12, 3, 0) },
-  ]);
-
-  // Three weeks of history: push / pull / legs, three sessions per week.
+  // Dense recent history — one finished workout on each of the last seven
+  // days so the History tab's current week has something on every day —
+  // plus older sessions so paging back a week (or two) shows content too.
   const rotation = [pushDay, pullDay, legDay];
-  const daysAgo = [2, 4, 6, 9, 11, 13, 16, 18, 20];
+  const daysAgo = [1, 2, 3, 4, 5, 6, 7, 9, 11, 13, 16, 18, 20];
   daysAgo.forEach((days, i) => {
     buildWorkout(data, days, true, rotation[i % rotation.length]());
   });

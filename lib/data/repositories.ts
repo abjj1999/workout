@@ -13,6 +13,12 @@ export interface ExerciseRepository {
 export interface WorkoutRepository {
   /** The unfinished workout, if one is in progress. */
   getActiveWorkout(): Promise<Workout | null>;
+  /**
+   * The workout that started on the given local calendar day
+   * (key format "YYYY-MM-DD"). Prefers an in-progress workout if the day
+   * somehow has more than one.
+   */
+  getWorkoutByDate(dateKey: string): Promise<Workout | null>;
   /** Finished workouts, newest first. */
   getHistory(): Promise<Workout[]>;
   getById(id: string): Promise<Workout | null>;
@@ -21,6 +27,7 @@ export interface WorkoutRepository {
 
   startWorkout(): Promise<Workout>;
   finishWorkout(workoutId: string): Promise<Workout>;
+  updateWorkoutNote(workoutId: string, note: string): Promise<Workout>;
   addExerciseToWorkout(
     workoutId: string,
     exerciseId: string,
