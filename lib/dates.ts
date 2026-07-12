@@ -10,10 +10,6 @@ export function formatDayHeading(date: Date): string {
   return dayjs(date).format("dddd, MMM D").toUpperCase();
 }
 
-export function isToday(date: Date): boolean {
-  return dayjs(date).isSame(dayjs(), "day");
-}
-
 /** Date shifted by the given number of days (negative goes back). */
 export function addDays(date: Date, days: number): Date {
   return dayjs(date).add(days, "day").toDate();
