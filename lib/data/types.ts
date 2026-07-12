@@ -1,10 +1,16 @@
 export interface Exercise {
   id: string;
   name: string;
+  /** Body parts, e.g. "chest" — the picker's filter chips. */
   muscleGroups: string[];
+  /** Primary + secondary muscles, e.g. "pectorals". */
   subRegions: string[];
+  equipment: string;
   thumbnailUrl: string;
-  videoUrl: string;
+  /** Animated demonstration (GIF, ~180p). */
+  gifUrl: string;
+  /** Step-by-step how-to instructions. */
+  instructions: string[];
 }
 
 export interface Workout {

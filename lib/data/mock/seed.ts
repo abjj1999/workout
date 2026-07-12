@@ -73,28 +73,29 @@ function buildWorkout(
   });
 }
 
+// Exercise ids reference the bundled exercises-dataset library.
 const pushDay = (): ExercisePlan[] => [
-  { exerciseId: "bench-press", sets: done(185, 8, 4) },
-  { exerciseId: "incline-db-press", sets: done(65, 10) },
-  { exerciseId: "overhead-press", sets: done(105, 8) },
-  { exerciseId: "lateral-raise", sets: done(20, 15) },
-  { exerciseId: "triceps-pushdown", sets: done(50, 12) },
+  { exerciseId: "0025", sets: done(185, 8, 4) }, // Barbell Bench Press
+  { exerciseId: "0314", sets: done(65, 10) }, // Dumbbell Incline Bench Press
+  { exerciseId: "0091", sets: done(105, 8) }, // Barbell Seated Overhead Press
+  { exerciseId: "0334", sets: done(20, 15) }, // Dumbbell Lateral Raise
+  { exerciseId: "0201", sets: done(50, 12) }, // Cable Pushdown
 ];
 
 const pullDay = (): ExercisePlan[] => [
-  { exerciseId: "pull-up", sets: done(0, 10, 4) },
-  { exerciseId: "barbell-row", sets: done(155, 10) },
-  { exerciseId: "lat-pulldown", sets: done(120, 12) },
-  { exerciseId: "barbell-curl", sets: done(70, 10) },
-  { exerciseId: "hammer-curl", sets: done(30, 12) },
+  { exerciseId: "0652", sets: done(0, 10, 4) }, // Pull-Up
+  { exerciseId: "0027", sets: done(155, 10) }, // Barbell Bent Over Row
+  { exerciseId: "0198", sets: done(120, 12) }, // Cable Pulldown
+  { exerciseId: "0031", sets: done(70, 10) }, // Barbell Curl
+  { exerciseId: "0313", sets: done(30, 12) }, // Dumbbell Hammer Curl
 ];
 
 const legDay = (): ExercisePlan[] => [
-  { exerciseId: "back-squat", sets: done(225, 6, 4) },
-  { exerciseId: "romanian-deadlift", sets: done(185, 10) },
-  { exerciseId: "leg-press", sets: done(360, 12) },
-  { exerciseId: "leg-curl", sets: done(90, 12) },
-  { exerciseId: "calf-raise", sets: done(140, 15) },
+  { exerciseId: "0043", sets: done(225, 6, 4) }, // Barbell Full Squat
+  { exerciseId: "0085", sets: done(185, 10) }, // Barbell Romanian Deadlift
+  { exerciseId: "0739", sets: done(360, 12) }, // Sled 45° Leg Press
+  { exerciseId: "0586", sets: done(90, 12) }, // Lever Lying Leg Curl
+  { exerciseId: "0605", sets: done(140, 15) }, // Lever Standing Calf Raise
 ];
 
 /**
