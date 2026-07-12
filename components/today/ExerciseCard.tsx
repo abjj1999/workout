@@ -93,7 +93,7 @@ export function ExerciseCard({
             className="h-12 justify-center px-4"
           >
             <Text className="font-body text-body text-text-primary">
-              Watch Video
+              Watch Demo
             </Text>
           </Pressable>
           <View className="h-px bg-border" />

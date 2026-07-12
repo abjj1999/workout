@@ -193,7 +193,7 @@ export default function AddExerciseScreen() {
             return (
               <ListRow
                 title={item.name}
-                subtitle={item.muscleGroups.join(" · ")}
+                subtitle={[...item.muscleGroups, item.equipment].join(" · ")}
                 className={added ? "opacity-40" : ""}
                 leading={
                   <Image
