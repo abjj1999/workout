@@ -52,25 +52,28 @@ export default function AddExerciseScreen() {
     })();
   }, []);
 
-  // Every muscle group in the library, in the order exercises introduce them.
+  // Filter chips are the primary target muscles (subRegions[0], e.g.
+  // "biceps"), most common first. Secondary muscles are too inconsistent
+  // in the dataset to filter on.
   const muscleGroups = useMemo(() => {
-    const groups: string[] = [];
+    const counts = new Map<string, number>();
     for (const exercise of exercises) {
-      for (const group of exercise.muscleGroups) {
-        if (!groups.includes(group)) groups.push(group);
-      }
+      const target = exercise.subRegions[0];
+      if (target) counts.set(target, (counts.get(target) ?? 0) + 1);
     }
-    return groups;
+    return [...counts.keys()].sort(
+      (a, b) => (counts.get(b) ?? 0) - (counts.get(a) ?? 0),
+    );
   }, [exercises]);
 
-  // Muscle filter is a union: pick back + biceps and you get every exercise
-  // that hits either. Search narrows further within that.
+  // Muscle filter is a union: pick lats + biceps and you get every exercise
+  // that targets either. Search narrows further within that.
   const visibleExercises = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return exercises.filter((exercise) => {
       if (
         selectedMuscles.size > 0 &&
-        !exercise.muscleGroups.some((group) => selectedMuscles.has(group))
+        !selectedMuscles.has(exercise.subRegions[0])
       ) {
         return false;
       }
@@ -193,7 +196,7 @@ export default function AddExerciseScreen() {
             return (
               <ListRow
                 title={item.name}
-                subtitle={[...item.muscleGroups, item.equipment].join(" · ")}
+                subtitle={item.subRegions.join(" · ")}
                 className={added ? "opacity-40" : ""}
                 leading={
                   <Image
