@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Alert, Text, View } from "react-native";
 
 import { ExerciseCard } from "@/components/today/ExerciseCard";
-import { Button, Screen } from "@/components/ui";
+import { Button, Card, Screen, Skeleton, SkeletonPulse } from "@/components/ui";
 import { DEFAULT_SET_VALUES } from "@/constants/workout";
 import { workoutRepository, type WorkoutSet } from "@/lib/data";
 import { formatDayHeading, toDateKey } from "@/lib/dates";
@@ -18,6 +18,7 @@ export default function TodayScreen() {
   const [today] = useState(() => new Date());
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [finishing, setFinishing] = useState(false);
 
   const dateKey = toDateKey(today);
   const { workout, sections, loading, reload } = useWorkoutForDate(dateKey);
@@ -33,13 +34,28 @@ export default function TodayScreen() {
   }, []);
 
   const handleFinishWorkout = async () => {
+    if (!workout || finishing) return;
+    setFinishing(true);
+    try {
+      // Finishing also syncs the session to the backend, so it can take a
+      // moment on a slow connection.
+      await workoutRepository.finishWorkout(workout.id);
+      await reload();
+      router.push({
+        pathname: "/summary/[id]",
+        params: { id: workout.id },
+      });
+    } finally {
+      setFinishing(false);
+    }
+  };
+
+  // Reopens a completed workout for edits; finishing again replaces the
+  // synced session, so History shows the corrected version.
+  const handleEditWorkout = async () => {
     if (!workout) return;
-    await workoutRepository.finishWorkout(workout.id);
+    await workoutRepository.reopenWorkout(workout.id);
     await reload();
-    router.push({
-      pathname: "/summary/[id]",
-      params: { id: workout.id },
-    });
   };
 
   const handleConfirmEdit = async (
@@ -115,7 +131,23 @@ export default function TodayScreen() {
         </Text>
       ) : null}
 
-      {!loading && workout === null ? (
+      {loading ? (
+        <SkeletonPulse>
+          <View className="mt-4 gap-4">
+            {[0, 1].map((placeholder) => (
+              <Card key={placeholder} className="gap-3">
+                <View className="flex-row items-center gap-3">
+                  <Skeleton className="h-5 flex-1" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </View>
+                <Skeleton className="h-10" />
+                <Skeleton className="h-10" />
+                <Skeleton className="h-10" />
+              </Card>
+            ))}
+          </View>
+        </SkeletonPulse>
+      ) : workout === null ? (
         <View className="mt-16 items-center gap-6">
           <Text className="font-body text-body text-text-secondary">
             No workout logged
@@ -165,9 +197,20 @@ export default function TodayScreen() {
                 onPress={() => router.push("/add-exercise")}
               />
               {sections.length > 0 ? (
-                <Button label="Finish Workout" onPress={handleFinishWorkout} />
+                <Button
+                  label={finishing ? "Finishing…" : "Finish Workout"}
+                  loading={finishing}
+                  onPress={handleFinishWorkout}
+                />
               ) : null}
             </View>
+          ) : workout ? (
+            <Button
+              variant="ghost"
+              label="Edit Workout"
+              onPress={handleEditWorkout}
+              className="mt-2"
+            />
           ) : null}
         </View>
       )}

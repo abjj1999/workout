@@ -92,9 +92,22 @@ export async function fetchWorkouts(): Promise<RemoteWorkout[]> {
   return body.data;
 }
 
-export async function saveWorkout(payload: WorkoutPayload): Promise<void> {
-  await apiFetch("/api/workouts", {
+/** Saves a new workout and returns its backend id. */
+export async function saveWorkout(payload: WorkoutPayload): Promise<string> {
+  const body = (await apiFetch("/api/workouts", {
     method: "POST",
+    body: JSON.stringify(payload),
+  })) as { data: { id: string } };
+  return body.data.id;
+}
+
+/** Replaces an already-synced workout (after an edit + re-finish). */
+export async function replaceWorkout(
+  workoutId: string,
+  payload: WorkoutPayload,
+): Promise<void> {
+  await apiFetch(`/api/workouts/${workoutId}`, {
+    method: "PUT",
     body: JSON.stringify(payload),
   });
 }

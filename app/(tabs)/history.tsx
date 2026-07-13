@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { WorkoutHistoryCard } from "@/components/history/WorkoutHistoryCard";
-import { Screen } from "@/components/ui";
+import { Card, Screen, Skeleton, SkeletonPulse } from "@/components/ui";
 import { colors } from "@/constants/colors";
 import { addDays, formatDayRange, toDateKey } from "@/lib/dates";
 import { useWorkoutHistory } from "@/lib/hooks/useWorkoutHistory";
@@ -78,7 +78,30 @@ export default function HistoryScreen() {
         </Pressable>
       </View>
 
-      {!loading && weekSummaries.length === 0 ? (
+      {loading ? (
+        <SkeletonPulse>
+          <View className="mt-4 gap-4">
+            {[0, 1, 2].map((placeholder) => (
+              <Card key={placeholder} className="gap-3">
+                <View className="flex-row items-center justify-between">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-4 w-14" />
+                </View>
+                <View className="flex-row gap-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </View>
+                <View className="h-px bg-border" />
+                <View className="flex-row gap-6">
+                  <Skeleton className="h-10 flex-1" />
+                  <Skeleton className="h-10 flex-1" />
+                  <Skeleton className="h-10 flex-1" />
+                </View>
+              </Card>
+            ))}
+          </View>
+        </SkeletonPulse>
+      ) : weekSummaries.length === 0 ? (
         <Text className="mt-16 text-center font-body text-body text-text-secondary">
           No workouts this week
         </Text>

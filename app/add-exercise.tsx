@@ -234,7 +234,8 @@ export default function AddExerciseScreen() {
 
         <Button
           label={doneLabel}
-          disabled={selectedIds.size === 0 || saving}
+          disabled={selectedIds.size === 0}
+          loading={saving}
           onPress={handleDone}
           className="mb-4 mt-3"
         />

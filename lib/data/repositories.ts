@@ -27,6 +27,8 @@ export interface WorkoutRepository {
 
   startWorkout(): Promise<Workout>;
   finishWorkout(workoutId: string): Promise<Workout>;
+  /** Clears finishedAt so a completed workout can be edited again. */
+  reopenWorkout(workoutId: string): Promise<Workout>;
   updateWorkoutNote(workoutId: string, note: string): Promise<Workout>;
   addExerciseToWorkout(
     workoutId: string,
@@ -42,4 +44,16 @@ export interface WorkoutRepository {
     patch: Partial<Pick<WorkoutSet, "weight" | "reps" | "completed">>,
   ): Promise<WorkoutSet>;
   deleteSet(setId: string): Promise<void>;
+}
+
+/**
+ * The in-memory store backing the live session. `importWorkout` lets a
+ * synced workout be copied in (with fresh local ids) so it can be edited.
+ */
+export interface LocalWorkoutRepository extends WorkoutRepository {
+  importWorkout(
+    workout: Workout,
+    exercises: WorkoutExercise[],
+    sets: WorkoutSet[],
+  ): Promise<Workout>;
 }
