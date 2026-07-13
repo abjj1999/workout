@@ -30,6 +30,7 @@ export function Button({
   const isDisabled = disabled === true || loading;
   return (
     <Pressable
+      {...props}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
@@ -39,7 +40,6 @@ export function Button({
       style={({ pressed }) =>
         pressed ? { transform: [{ scale: 0.98 }] } : undefined
       }
-      {...props}
     >
       {loading ? (
         <ActivityIndicator size="small" color={colors.textPrimary} />
