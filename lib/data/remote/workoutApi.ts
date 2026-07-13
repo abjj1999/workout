@@ -1,4 +1,4 @@
-import { getClerkInstance } from "@clerk/expo";
+import { getClerkInstance, isClerkRuntimeError } from "@clerk/expo";
 
 // Thin client for the workout-api backend (Next.js + Supabase). Requests
 // carry the current Clerk session token; the API verifies it and scopes
@@ -40,27 +40,51 @@ export interface WorkoutPayload {
   }[];
 }
 
+const REQUEST_TIMEOUT_MS = 10_000;
+
 async function apiFetch(path: string, init?: RequestInit): Promise<unknown> {
   if (!BASE_URL) {
     throw new Error(
       "Missing EXPO_PUBLIC_WORKOUT_API_URL. Add it to .env.local.",
     );
   }
-  const token = await getClerkInstance().session?.getToken();
+
+  let token: string | null | undefined;
+  try {
+    token = await getClerkInstance().session?.getToken();
+  } catch (error) {
+    if (isClerkRuntimeError(error) && error.code === "network_error") {
+      throw new Error(`API ${path} skipped: offline (no session token)`);
+    }
+    throw error;
+  }
   if (!token) throw new Error("Not signed in");
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
-  });
-  if (!response.ok) {
-    throw new Error(`API ${path} failed: ${response.status}`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`${BASE_URL}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`API ${path} failed: ${response.status}`);
+    }
+    // Await inside the try so the timeout also covers reading the body.
+    return await response.json();
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`API ${path} timed out after ${REQUEST_TIMEOUT_MS}ms`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
   }
-  return response.json();
 }
 
 export async function fetchWorkouts(): Promise<RemoteWorkout[]> {

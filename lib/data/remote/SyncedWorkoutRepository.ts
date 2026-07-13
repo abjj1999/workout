@@ -18,6 +18,7 @@ export class SyncedWorkoutRepository implements WorkoutRepository {
   private remoteExercises = new Map<string, WorkoutExercise[]>();
   private remoteSets = new Map<string, WorkoutSet[]>();
   private hasLoadedRemote = false;
+  private refreshPromise: Promise<void> | null = null;
 
   constructor(private readonly local: WorkoutRepository) {}
 
@@ -58,9 +59,22 @@ export class SyncedWorkoutRepository implements WorkoutRepository {
     this.hasLoadedRemote = true;
   }
 
+  // Concurrent callers (History reload + a detail screen's lazy load) share
+  // one request, so a slow response can't overwrite a newer cache.
+  private refreshRemote(): Promise<void> {
+    this.refreshPromise ??= (async () => {
+      try {
+        this.cacheRemote(await fetchWorkouts());
+      } finally {
+        this.refreshPromise = null;
+      }
+    })();
+    return this.refreshPromise;
+  }
+
   async getHistory(): Promise<Workout[]> {
     try {
-      this.cacheRemote(await fetchWorkouts());
+      await this.refreshRemote();
     } catch (error) {
       console.warn("Failed to load workout history:", error);
       // Fall through to whatever was cached (possibly nothing).
@@ -144,7 +158,14 @@ export class SyncedWorkoutRepository implements WorkoutRepository {
     // Synced (finished) workouts live in the backend, not the local store.
     const remote = this.remoteWorkouts.get(workoutId);
     if (remote) {
-      await updateWorkoutNote(workoutId, note);
+      try {
+        await updateWorkoutNote(workoutId, note);
+      } catch (error) {
+        // Keep the cache at its last-saved state so callers can see the
+        // write didn't take.
+        console.warn("Failed to save workout note:", error);
+        return remote;
+      }
       const updated = { ...remote, note };
       this.remoteWorkouts.set(workoutId, updated);
       return updated;

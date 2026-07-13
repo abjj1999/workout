@@ -109,8 +109,13 @@ export default function WorkoutSummaryScreen() {
 
   const saveNote = async () => {
     if (!detail) return;
-    await workoutRepository.updateWorkoutNote(detail.workout.id, note.trim());
-    setNoteSaved(true);
+    const updated = await workoutRepository.updateWorkoutNote(
+      detail.workout.id,
+      note.trim(),
+    );
+    // The repository returns the stored workout; if the remote write failed
+    // it still holds the old note, so don't claim the save happened.
+    setNoteSaved((updated.note ?? "") === note.trim());
   };
 
   return (
