@@ -91,7 +91,7 @@ export default function HistoryScreen() {
               onPress={() =>
                 router.push({
                   pathname: "/summary/[id]",
-                  params: { id: summary.workout.id },
+                  params: { id: summary.workout.id, source: "history" },
                 })
               }
             />

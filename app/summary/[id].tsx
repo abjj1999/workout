@@ -88,8 +88,14 @@ function VolumeGraph({ breakdown }: { breakdown: WorkoutDetail["breakdown"] }) {
 
 export default function WorkoutSummaryScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, source } = useLocalSearchParams<{
+    id: string;
+    source?: string;
+  }>();
   const { detail, loading } = useWorkoutDetail(id);
+  // Notes are only editable when viewing a synced workout from the History
+  // tab; the post-finish summary hides them entirely.
+  const canEditNotes = source === "history";
 
   const [note, setNote] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
@@ -203,28 +209,30 @@ export default function WorkoutSummaryScreen() {
                 </Text>
               </Card>
 
-              <View className="gap-2">
-                <View className="flex-row items-center justify-between">
-                  <Text className="font-body-medium text-label uppercase text-text-secondary">
-                    Notes
-                  </Text>
-                  {noteSaved ? (
-                    <Text className="font-body-medium text-label uppercase text-accent">
-                      Saved
+              {canEditNotes ? (
+                <View className="gap-2">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="font-body-medium text-label uppercase text-text-secondary">
+                      Notes
                     </Text>
-                  ) : null}
+                    {noteSaved ? (
+                      <Text className="font-body-medium text-label uppercase text-accent">
+                        Saved
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Input
+                    multiline
+                    placeholder="How did this session feel?"
+                    value={note}
+                    onChangeText={(text) => {
+                      setNote(text);
+                      setNoteSaved(false);
+                    }}
+                    onBlur={saveNote}
+                  />
                 </View>
-                <Input
-                  multiline
-                  placeholder="How did this session feel?"
-                  value={note}
-                  onChangeText={(text) => {
-                    setNote(text);
-                    setNoteSaved(false);
-                  }}
-                  onBlur={saveNote}
-                />
-              </View>
+              ) : null}
             </View>
           )}
         </ScrollView>
