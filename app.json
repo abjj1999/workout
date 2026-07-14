@@ -1,18 +1,23 @@
 {
   "expo": {
-    "name": "workout",
-    "slug": "gym",
+    "name": "IronLog",
+    "slug": "ironlog",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "workout",
+    "icon": "./assets/images/logo.png",
+    "scheme": "ironlog",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#131313",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.abdullah.ironlog",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.abdullah.ironlog",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -50,7 +55,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "4e299e46-64fd-484c-b5af-af7512beafc7"
+        "projectId": "48578d57-042d-4237-8e01-3fc2aa17b8de"
       }
     },
     "owner": "abjj1999"
