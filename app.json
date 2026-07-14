@@ -2,7 +2,7 @@
   "expo": {
     "name": "IronLog",
     "slug": "ironlog",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "ironlog",
@@ -11,7 +11,7 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.abdullah.ironlog",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -36,7 +36,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/splash_icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#131313",
