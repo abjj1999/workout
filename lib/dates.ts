@@ -15,6 +15,11 @@ export function addDays(date: Date, days: number): Date {
   return dayjs(date).add(days, "day").toDate();
 }
 
+/** Compact month-year label, e.g. "MAR 2026". */
+export function formatMonthYear(date: Date): string {
+  return dayjs(date).format("MMM YYYY").toUpperCase();
+}
+
 /** Week-strip label, e.g. "JUL 1 – JUL 7". */
 export function formatDayRange(start: Date, end: Date): string {
   return `${dayjs(start).format("MMM D")} – ${dayjs(end).format(

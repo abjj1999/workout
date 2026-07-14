@@ -19,6 +19,8 @@ import {
   useWorkoutDetail,
   type WorkoutDetail,
 } from "@/lib/hooks/useWorkoutDetail";
+import { useSettings } from "@/lib/settings/useSettings";
+import { toDisplayWeight, type WeightUnit } from "@/lib/units";
 
 function formatNumber(value: number): string {
   return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -36,7 +38,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 }
 
 // Simple rule-based coaching line derived from set completion.
-function buildRecommendation(detail: WorkoutDetail): string {
+function buildRecommendation(detail: WorkoutDetail, unit: WeightUnit): string {
   const { completedSets, totalSets, breakdown } = detail;
   if (totalSets === 0) {
     return "No sets logged in this session. Next time, log your sets as you go so your progress is tracked.";
@@ -47,7 +49,8 @@ function buildRecommendation(detail: WorkoutDetail): string {
   );
   const rate = completedSets / totalSets;
   if (rate >= 1) {
-    return `You completed every set — strong session. Consider adding 5 lbs to ${top.name} next time to keep progressing.`;
+    const bump = unit === "kg" ? "2.5 kg" : "5 lbs";
+    return `You completed every set — strong session. Consider adding ${bump} to ${top.name} next time to keep progressing.`;
   }
   if (rate >= 0.75) {
     return `You finished ${completedSets} of ${totalSets} sets. Repeat these weights next session and aim to complete them all before moving up.`;
@@ -56,7 +59,13 @@ function buildRecommendation(detail: WorkoutDetail): string {
 }
 
 // Volume-per-exercise bars, longest bar = highest volume.
-function VolumeGraph({ breakdown }: { breakdown: WorkoutDetail["breakdown"] }) {
+function VolumeGraph({
+  breakdown,
+  unit,
+}: {
+  breakdown: WorkoutDetail["breakdown"];
+  unit: WeightUnit;
+}) {
   const maxVolume = Math.max(1, ...breakdown.map((entry) => entry.volume));
   return (
     <View className="gap-4">
@@ -71,7 +80,7 @@ function VolumeGraph({ breakdown }: { breakdown: WorkoutDetail["breakdown"] }) {
             </Text>
             <Text className="font-display text-label text-text-secondary">
               {entry.completedSets}/{entry.totalSets} SETS ·{" "}
-              {formatNumber(entry.volume)}
+              {formatNumber(Math.round(toDisplayWeight(entry.volume, unit)))}
             </Text>
           </View>
           <View className="h-2 overflow-hidden rounded-full bg-surface-raised">
@@ -93,6 +102,7 @@ export default function WorkoutSummaryScreen() {
     source?: string;
   }>();
   const { detail, loading } = useWorkoutDetail(id);
+  const unit = useSettings((state) => state.weightUnit);
   // Notes are only editable when viewing a synced workout from the History
   // tab; the post-finish summary hides them entirely.
   const canEditNotes = source === "history";
@@ -177,7 +187,9 @@ export default function WorkoutSummaryScreen() {
                     label="Sets"
                   />
                   <Stat
-                    value={formatNumber(detail.totalVolume)}
+                    value={formatNumber(
+                      Math.round(toDisplayWeight(detail.totalVolume, unit)),
+                    )}
                     label="Volume"
                   />
                   <Stat
@@ -195,7 +207,7 @@ export default function WorkoutSummaryScreen() {
                 <Text className="font-body-medium text-label uppercase text-text-secondary">
                   Volume by Exercise
                 </Text>
-                <VolumeGraph breakdown={detail.breakdown} />
+                <VolumeGraph breakdown={detail.breakdown} unit={unit} />
               </Card>
 
               <Card className="gap-3">
@@ -210,7 +222,7 @@ export default function WorkoutSummaryScreen() {
                   </Text>
                 </View>
                 <Text className="font-body text-body text-text-primary">
-                  {buildRecommendation(detail)}
+                  {buildRecommendation(detail, unit)}
                 </Text>
               </Card>
 

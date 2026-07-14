@@ -6,8 +6,9 @@ import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeabl
 import { Input, Stepper } from "@/components/ui";
 import { colors } from "@/constants/colors";
 import type { WorkoutSet } from "@/lib/data";
+import { useSettings } from "@/lib/settings/useSettings";
+import { toDisplayWeight, toStoredWeight, weightStep } from "@/lib/units";
 
-const WEIGHT_STEP = 5;
 const REPS_STEP = 1;
 
 type SetValues = { weight: number; reps: number };
@@ -64,11 +65,16 @@ function SetEditor({
   onConfirm: (values: SetValues) => void;
   onCancel: () => void;
 }) {
-  const [weight, setWeight] = useState(set.weight);
+  const unit = useSettings((state) => state.weightUnit);
+  // Edit in the display unit; convert back to stored lbs on confirm.
+  const [weight, setWeight] = useState(() =>
+    toDisplayWeight(set.weight, unit),
+  );
   const [reps, setReps] = useState(set.reps);
   const [directField, setDirectField] = useState<"weight" | "reps" | null>(
     null,
   );
+  const step = weightStep(unit);
 
   return (
     <View className="gap-3 py-3">
@@ -88,8 +94,8 @@ function SetEditor({
           ) : (
             <Stepper
               value={weight}
-              onDecrement={() => setWeight((w) => Math.max(0, w - WEIGHT_STEP))}
-              onIncrement={() => setWeight((w) => w + WEIGHT_STEP)}
+              onDecrement={() => setWeight((w) => Math.max(0, w - step))}
+              onIncrement={() => setWeight((w) => w + step)}
               onValuePress={() => setDirectField("weight")}
             />
           )}
@@ -131,7 +137,9 @@ function SetEditor({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Confirm edit"
-          onPress={() => onConfirm({ weight, reps })}
+          onPress={() =>
+            onConfirm({ weight: toStoredWeight(weight, unit), reps })
+          }
           className="h-12 w-12 items-center justify-center rounded-btn bg-accent"
           style={({ pressed }) =>
             pressed ? { transform: [{ scale: 0.98 }] } : undefined
@@ -155,6 +163,8 @@ export function SetRow({
   onDelete,
 }: SetRowProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const unit = useSettings((state) => state.weightUnit);
+  const displayWeight = toDisplayWeight(set.weight, unit);
 
   if (isEditing) {
     return <SetEditor set={set} onConfirm={onConfirmEdit} onCancel={onCancelEdit} />;
@@ -164,14 +174,14 @@ export function SetRow({
     <Pressable
       disabled={!editable}
       onPress={onRequestEdit}
-      accessibilityLabel={`Set ${set.setNumber}: ${set.weight} by ${set.reps}`}
+      accessibilityLabel={`Set ${set.setNumber}: ${displayWeight} by ${set.reps}`}
       className="h-14 flex-row items-center gap-3 bg-surface"
     >
       <Text className="w-6 text-center font-display text-label text-text-secondary">
         {set.setNumber}
       </Text>
       <Text className="flex-1 font-display text-body text-text-primary">
-        {set.weight} × {set.reps}
+        {displayWeight} × {set.reps}
       </Text>
       <Pressable
         disabled={!editable}
