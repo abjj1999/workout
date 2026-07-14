@@ -26,7 +26,12 @@ export default function CreateRoutineScreen() {
 
   useEffect(() => {
     (async () => {
-      setExercises(await exerciseRepository.getAll());
+      try {
+        setExercises(await exerciseRepository.getAll());
+      } catch (loadError) {
+        console.warn("Failed to load exercises:", loadError);
+        setError("Couldn't load the exercise library.");
+      }
     })();
   }, []);
 

@@ -29,17 +29,20 @@ export async function apiFetch(
   }
   if (!token) throw new Error("Not signed in");
 
+  // Merge caller headers first, then force auth so it can't be overridden.
+  const headers = new Headers(init?.headers);
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  headers.set("Authorization", `Bearer ${token}`);
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
     const response = await fetch(`${BASE_URL}${path}`, {
       ...init,
       signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        ...init?.headers,
-      },
+      headers,
     });
     if (!response.ok) {
       throw new Error(`API ${path} failed: ${response.status}`);
