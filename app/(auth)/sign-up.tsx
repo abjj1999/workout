@@ -1,7 +1,8 @@
 import { useAuth, useSignUp } from "@clerk/expo";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,6 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ErrorText } from "@/components/auth/ErrorText";
 import { SSOButtons } from "@/components/auth/SSOButtons";
 import { Button, Input } from "@/components/ui";
+import { colors } from "@/constants/colors";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -50,9 +52,25 @@ export default function SignUpScreen() {
     }
   };
 
-  // Session became active (or already was): guards swap to the app.
-  if (signUp.status === "complete" || isSignedIn) {
-    return null;
+  // Clerk persists the sign-up attempt across launches, so a previous run
+  // that completed without activating its session (app closed mid-flow)
+  // would strand this screen: finalize it, or start fresh if that fails.
+  const status = signUp.status;
+  useEffect(() => {
+    if (status === "complete" && !isSignedIn && fetchStatus === "idle") {
+      signUp.finalize().catch(() => signUp.reset());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, isSignedIn, fetchStatus]);
+
+  // Session became active (or already was): guards swap to the app. Show a
+  // spinner (never a blank screen) while that or the recovery above runs.
+  if (status === "complete" || isSignedIn) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color={colors.accent} />
+      </SafeAreaView>
+    );
   }
 
   // Email verification step: account created, waiting on the emailed code.

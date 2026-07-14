@@ -4,6 +4,7 @@ import {
   exerciseRepository,
   workoutRepository,
   type Workout,
+  type WorkoutSet,
 } from "@/lib/data";
 
 export interface ExerciseBreakdown {
@@ -14,6 +15,8 @@ export interface ExerciseBreakdown {
   totalSets: number;
   /** Weight moved across completed sets: sum of weight × reps. */
   volume: number;
+  /** Every set as performed, in set-number order. */
+  sets: WorkoutSet[];
 }
 
 export interface WorkoutDetail {
@@ -81,6 +84,7 @@ export function useWorkoutDetail(workoutId: string) {
         completedSets: exerciseCompleted,
         totalSets: sets.length,
         volume: exerciseVolume,
+        sets,
       });
     }
 

@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { Text } from "react-native";
 
 import { BodyWeightCard } from "@/components/profile/BodyWeightCard";
@@ -10,6 +11,7 @@ import { useBodyWeight } from "@/lib/hooks/useBodyWeight";
 import { useProfileStats } from "@/lib/hooks/useProfileStats";
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const { stats, records, loading: statsLoading } = useProfileStats();
   const {
@@ -37,6 +39,7 @@ export default function ProfileScreen() {
         entries={entries}
         loading={weightLoading}
         onLog={log}
+        onOpenHistory={() => router.push("/body-weight")}
       />
       <SettingsCard />
 
