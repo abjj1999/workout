@@ -5,6 +5,8 @@ import { Card, Chip } from "@/components/ui";
 import { colors } from "@/constants/colors";
 import { formatDayHeading } from "@/lib/dates";
 import type { WorkoutSummary } from "@/lib/hooks/useWorkoutHistory";
+import { useSettings } from "@/lib/settings/useSettings";
+import { toDisplayWeight } from "@/lib/units";
 
 // "12340" -> "12,340" without relying on Intl availability.
 function formatNumber(value: number): string {
@@ -37,6 +39,7 @@ export function WorkoutHistoryCard({
     totalVolume,
     durationMinutes,
   } = summary;
+  const unit = useSettings((state) => state.weightUnit);
 
   const card = (
     <Card className="gap-3">
@@ -74,7 +77,10 @@ export function WorkoutHistoryCard({
           label={exerciseCount === 1 ? "Exercise" : "Exercises"}
         />
         <Stat value={String(completedSets)} label="Sets" />
-        <Stat value={formatNumber(totalVolume)} label="Volume" />
+        <Stat
+          value={formatNumber(Math.round(toDisplayWeight(totalVolume, unit)))}
+          label="Volume"
+        />
       </View>
     </Card>
   );

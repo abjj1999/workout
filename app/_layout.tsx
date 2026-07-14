@@ -18,6 +18,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { colors } from "@/constants/colors";
 import { useSession } from "@/lib/session/useSession";
+import { useSettings } from "@/lib/settings/useSettings";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -53,15 +54,19 @@ function RootNavigator() {
   const hydrated = useSession((state) => state.hydrated);
   const hasOnboarded = useSession((state) => state.hasOnboarded);
   const hydrate = useSession((state) => state.hydrate);
+  const settingsHydrated = useSettings((state) => state.hydrated);
+  const hydrateSettings = useSettings((state) => state.hydrate);
   const { isLoaded: authLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
     hydrate();
-  }, [hydrate]);
+    hydrateSettings();
+  }, [hydrate, hydrateSettings]);
 
-  // Hold the splash screen until fonts, the onboarding flag, and Clerk's
-  // restored session state are all known, so the first frame is the right one.
-  const ready = fontsLoaded && hydrated && authLoaded;
+  // Hold the splash screen until fonts, the onboarding flag, settings, and
+  // Clerk's restored session state are all known, so the first frame is the
+  // right one.
+  const ready = fontsLoaded && hydrated && settingsHydrated && authLoaded;
 
   useEffect(() => {
     if (ready) {
