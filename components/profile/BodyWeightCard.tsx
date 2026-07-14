@@ -1,23 +1,25 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 import { Button, Card, Input, Skeleton, SkeletonPulse } from "@/components/ui";
+import { colors } from "@/constants/colors";
 import type { BodyWeightEntry } from "@/lib/data/remote/bodyWeightApi";
 import { useSettings } from "@/lib/settings/useSettings";
 import { toDisplayWeight, toStoredWeight } from "@/lib/units";
 
-const SPARK_BARS = 14;
-
-// Latest weigh-in, change vs the previous one, a mini bar trend of recent
-// entries, and an inline field to log today's weight.
+// Latest weigh-in and an inline field to log today's weight. Tapping the
+// current weight opens the full progression screen.
 export function BodyWeightCard({
   entries,
   loading,
   onLog,
+  onOpenHistory,
 }: {
   entries: BodyWeightEntry[];
   loading: boolean;
   onLog: (weight: number) => Promise<void>;
+  onOpenHistory: () => void;
 }) {
   const [input, setInput] = useState("");
   const [saving, setSaving] = useState(false);
@@ -31,11 +33,6 @@ export function BodyWeightCard({
       ? toDisplayWeight(latest.weight, unit) -
         toDisplayWeight(previous.weight, unit)
       : null;
-
-  // Oldest → newest for the trend bars.
-  const trend = entries.slice(0, SPARK_BARS).reverse();
-  const min = Math.min(...trend.map((entry) => entry.weight));
-  const max = Math.max(...trend.map((entry) => entry.weight));
 
   const handleLog = async () => {
     const typed = Number(input.replace(",", "."));
@@ -77,7 +74,15 @@ export function BodyWeightCard({
       </Text>
 
       {latest ? (
-        <View className="flex-row items-end justify-between">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="View body weight progression"
+          onPress={onOpenHistory}
+          className="flex-row items-center justify-between"
+          style={({ pressed }) =>
+            pressed ? { transform: [{ scale: 0.98 }] } : undefined
+          }
+        >
           <View className="flex-row items-end gap-2">
             <Text className="font-display text-title text-text-primary">
               {toDisplayWeight(latest.weight, unit)}
@@ -96,25 +101,17 @@ export function BodyWeightCard({
               </Text>
             ) : null}
           </View>
-
-          {trend.length > 1 ? (
-            <View className="h-12 flex-row items-end gap-1">
-              {trend.map((entry, index) => {
-                const ratio =
-                  max === min ? 0.6 : (entry.weight - min) / (max - min);
-                return (
-                  <View
-                    key={entry.id}
-                    className={`w-2 rounded-full ${
-                      index === trend.length - 1 ? "bg-accent" : "bg-border"
-                    }`}
-                    style={{ height: 12 + ratio * 36 }}
-                  />
-                );
-              })}
-            </View>
-          ) : null}
-        </View>
+          <View className="flex-row items-center gap-1">
+            <Text className="font-body-medium text-label uppercase text-text-secondary">
+              Progress
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={16}
+              color={colors.textSecondary}
+            />
+          </View>
+        </Pressable>
       ) : (
         <Text className="font-body text-body text-text-secondary">
           Log your first weigh-in to start the trend.

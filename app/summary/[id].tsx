@@ -58,7 +58,8 @@ function buildRecommendation(detail: WorkoutDetail, unit: WeightUnit): string {
   return `You completed ${completedSets} of ${totalSets} sets. Consider dropping the weight about 10% next time to rebuild momentum.`;
 }
 
-// Volume-per-exercise bars, longest bar = highest volume.
+// Volume-per-exercise bars, longest bar = highest volume. Tapping an
+// exercise expands its set-by-set detail.
 function VolumeGraph({
   breakdown,
   unit,
@@ -67,30 +68,103 @@ function VolumeGraph({
   unit: WeightUnit;
 }) {
   const maxVolume = Math.max(1, ...breakdown.map((entry) => entry.volume));
+  const [expandedIds, setExpandedIds] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   return (
     <View className="gap-4">
-      {breakdown.map((entry) => (
-        <View key={entry.workoutExerciseId} className="gap-1.5">
-          <View className="flex-row items-center justify-between gap-2">
-            <Text
-              numberOfLines={1}
-              className="flex-1 font-body text-body text-text-primary"
+      {breakdown.map((entry) => {
+        const expanded = expandedIds.has(entry.workoutExerciseId);
+        return (
+          <View key={entry.workoutExerciseId} className="gap-1.5">
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ expanded }}
+              accessibilityLabel={`${entry.name}, ${entry.completedSets} of ${entry.totalSets} sets`}
+              onPress={() => toggleExpanded(entry.workoutExerciseId)}
+              className="gap-1.5"
             >
-              {entry.name}
-            </Text>
-            <Text className="font-display text-label text-text-secondary">
-              {entry.completedSets}/{entry.totalSets} SETS ·{" "}
-              {formatNumber(Math.round(toDisplayWeight(entry.volume, unit)))}
-            </Text>
+              <View className="flex-row items-center justify-between gap-2">
+                <Text
+                  numberOfLines={1}
+                  className="flex-1 font-body text-body text-text-primary"
+                >
+                  {entry.name}
+                </Text>
+                <Text className="font-display text-label text-text-secondary">
+                  {entry.completedSets}/{entry.totalSets} SETS ·{" "}
+                  {formatNumber(Math.round(toDisplayWeight(entry.volume, unit)))}
+                </Text>
+                <Ionicons
+                  name={expanded ? "chevron-up" : "chevron-down"}
+                  size={14}
+                  color={colors.textSecondary}
+                />
+              </View>
+              <View className="h-2 overflow-hidden rounded-full bg-surface-raised">
+                <View
+                  className="h-2 rounded-full bg-accent"
+                  style={{ width: `${(entry.volume / maxVolume) * 100}%` }}
+                />
+              </View>
+            </Pressable>
+
+            {expanded ? (
+              <View className="mt-1 gap-1">
+                {entry.sets.map((set) => (
+                  <View
+                    key={set.id}
+                    className="flex-row items-center gap-3 py-0.5"
+                  >
+                    <Text className="w-6 text-center font-display text-label text-text-secondary">
+                      {set.setNumber}
+                    </Text>
+                    <Text className="flex-1 font-display text-body text-text-primary">
+                      {toDisplayWeight(set.weight, unit)} × {set.reps}
+                    </Text>
+                    <Text
+                      className={`font-body-medium text-label uppercase ${
+                        set.completed ? "text-accent" : "text-text-secondary"
+                      }`}
+                    >
+                      {set.completed ? "Completed" : "Skipped"}
+                    </Text>
+                    <Ionicons
+                      name={
+                        set.completed
+                          ? "checkmark-circle"
+                          : "close-circle-outline"
+                      }
+                      size={16}
+                      color={
+                        set.completed ? colors.accent : colors.textSecondary
+                      }
+                    />
+                  </View>
+                ))}
+                {entry.sets.length === 0 ? (
+                  <Text className="font-body text-label text-text-secondary">
+                    No sets logged.
+                  </Text>
+                ) : null}
+              </View>
+            ) : null}
           </View>
-          <View className="h-2 overflow-hidden rounded-full bg-surface-raised">
-            <View
-              className="h-2 rounded-full bg-accent"
-              style={{ width: `${(entry.volume / maxVolume) * 100}%` }}
-            />
-          </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }

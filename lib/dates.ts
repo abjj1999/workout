@@ -20,6 +20,11 @@ export function formatMonthYear(date: Date): string {
   return dayjs(date).format("MMM YYYY").toUpperCase();
 }
 
+/** Compact date for list rows, e.g. "Jul 1, 2026". */
+export function formatShortDate(date: Date): string {
+  return dayjs(date).format("MMM D, YYYY");
+}
+
 /** Week-strip label, e.g. "JUL 1 – JUL 7". */
 export function formatDayRange(start: Date, end: Date): string {
   return `${dayjs(start).format("MMM D")} – ${dayjs(end).format(
