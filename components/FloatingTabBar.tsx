@@ -12,7 +12,7 @@ const TAB_ICONS: Record<string, { active: IoniconName; inactive: IoniconName }> 
   {
     index: { active: "today", inactive: "today-outline" },
     history: { active: "time", inactive: "time-outline" },
-    exercises: { active: "barbell", inactive: "barbell-outline" },
+    routines: { active: "barbell", inactive: "barbell-outline" },
     profile: { active: "person", inactive: "person-outline" },
   };
 

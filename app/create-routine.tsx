@@ -7,51 +7,34 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, Chip, Input, ListRow } from "@/components/ui";
 import { colors } from "@/constants/colors";
-import {
-  exerciseRepository,
-  workoutRepository,
-  type Exercise,
-} from "@/lib/data";
-import { toDateKey } from "@/lib/dates";
-import { addExercisesToToday } from "@/lib/startSession";
+import { exerciseRepository, type Exercise } from "@/lib/data";
+import { createRoutine } from "@/lib/data/remote/routinesApi";
 
-// Multi-select exercise picker. Reached from Today's "Start New Session"
-// (no workout yet — Done starts one) and from "+ Add Exercise" (appends to
-// the active workout). Every selected exercise starts with default sets so
-// there is something to edit immediately.
-export default function AddExerciseScreen() {
+// Name a routine and pick its exercises (same multi-select interaction as
+// the session picker). Selection order becomes the routine's order.
+export default function CreateRoutineScreen() {
   const router = useRouter();
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [name, setName] = useState("");
   const [query, setQuery] = useState("");
   const [selectedMuscles, setSelectedMuscles] = useState<ReadonlySet<string>>(
     new Set(),
   );
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
-    new Set(),
-  );
-  const [existingIds, setExistingIds] = useState<ReadonlySet<string>>(
-    new Set(),
-  );
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      setExercises(await exerciseRepository.getAll());
-      const workout = await workoutRepository.getWorkoutByDate(
-        toDateKey(new Date()),
-      );
-      if (workout && workout.finishedAt === null) {
-        const workoutExercises = await workoutRepository.getWorkoutExercises(
-          workout.id,
-        );
-        setExistingIds(new Set(workoutExercises.map((we) => we.exerciseId)));
+      try {
+        setExercises(await exerciseRepository.getAll());
+      } catch (loadError) {
+        console.warn("Failed to load exercises:", loadError);
+        setError("Couldn't load the exercise library.");
       }
     })();
   }, []);
 
-  // Filter chips are the primary target muscles (subRegions[0], e.g.
-  // "biceps"), most common first. Secondary muscles are too inconsistent
-  // in the dataset to filter on.
   const muscleGroups = useMemo(() => {
     const counts = new Map<string, number>();
     for (const exercise of exercises) {
@@ -63,8 +46,6 @@ export default function AddExerciseScreen() {
     );
   }, [exercises]);
 
-  // Muscle filter is a union: pick lats + biceps and you get every exercise
-  // that targets either. Search narrows further within that.
   const visibleExercises = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return exercises.filter((exercise) => {
@@ -91,38 +72,41 @@ export default function AddExerciseScreen() {
   };
 
   const toggleSelected = (id: string) => {
-    setSelectedIds((current) => {
-      const next = new Set(current);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((selected) => selected !== id)
+        : [...current, id],
+    );
   };
 
-  const handleDone = async () => {
-    if (selectedIds.size === 0 || saving) return;
+  const canSave = name.trim().length > 0 && selectedIds.length > 0 && !saving;
+
+  const handleSave = async () => {
+    if (!canSave) return;
     setSaving(true);
-    await addExercisesToToday(selectedIds);
-    // Today reloads on focus, so it picks the new session up immediately.
-    router.back();
+    setError(null);
+    try {
+      await createRoutine(name.trim(), selectedIds);
+      // Routines reloads on focus, so the new one shows up immediately.
+      router.back();
+    } catch (saveError) {
+      console.warn("Failed to create routine:", saveError);
+      setError("Couldn't save the routine. Check your connection and retry.");
+      setSaving(false);
+    }
   };
 
-  const doneLabel =
-    selectedIds.size === 0
+  const saveLabel =
+    selectedIds.length === 0
       ? "Select Exercises"
-      : `Add ${selectedIds.size} ${
-          selectedIds.size === 1 ? "Exercise" : "Exercises"
-        }`;
+      : `Save Routine (${selectedIds.length})`;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom"]}>
       <View className="flex-1 px-4 pt-4">
         <View className="flex-row items-center gap-2">
           <Text className="flex-1 font-display text-title uppercase text-text-primary">
-            Add Exercises
+            New Routine
           </Text>
           <Pressable
             accessibilityRole="button"
@@ -138,11 +122,18 @@ export default function AddExerciseScreen() {
         </View>
 
         <Input
+          placeholder="Routine name (e.g. Push Day)"
+          value={name}
+          onChangeText={setName}
+          className="mt-4"
+        />
+
+        <Input
           placeholder="Search exercises"
           value={query}
           onChangeText={setQuery}
           autoCapitalize="none"
-          className="mt-4"
+          className="mt-3"
         />
 
         <ScrollView
@@ -173,13 +164,11 @@ export default function AddExerciseScreen() {
             </Text>
           }
           renderItem={({ item }) => {
-            const added = existingIds.has(item.id);
-            const selected = selectedIds.has(item.id);
+            const selected = selectedIds.includes(item.id);
             return (
               <ListRow
                 title={item.name}
                 subtitle={item.subRegions.join(" · ")}
-                className={added ? "opacity-40" : ""}
                 leading={
                   <Image
                     source={{ uri: item.thumbnailUrl }}
@@ -188,37 +177,36 @@ export default function AddExerciseScreen() {
                   />
                 }
                 trailing={
-                  added ? (
-                    <Text className="font-body-medium text-label uppercase text-text-secondary">
-                      Added
-                    </Text>
-                  ) : (
-                    <View
-                      className={`h-7 w-7 items-center justify-center rounded-full border ${
-                        selected ? "border-accent bg-accent" : "border-border"
-                      }`}
-                    >
-                      {selected ? (
-                        <Ionicons
-                          name="checkmark"
-                          size={16}
-                          color={colors.textPrimary}
-                        />
-                      ) : null}
-                    </View>
-                  )
+                  <View
+                    className={`h-7 w-7 items-center justify-center rounded-full border ${
+                      selected ? "border-accent bg-accent" : "border-border"
+                    }`}
+                  >
+                    {selected ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={colors.textPrimary}
+                      />
+                    ) : null}
+                  </View>
                 }
-                onPress={added ? undefined : () => toggleSelected(item.id)}
+                onPress={() => toggleSelected(item.id)}
               />
             );
           }}
         />
 
+        {error ? (
+          <Text className="mt-2 text-center font-body text-label text-accent">
+            {error}
+          </Text>
+        ) : null}
         <Button
-          label={doneLabel}
-          disabled={selectedIds.size === 0}
+          label={saveLabel}
+          disabled={!canSave}
           loading={saving}
-          onPress={handleDone}
+          onPress={handleSave}
           className="mb-4 mt-3"
         />
       </View>

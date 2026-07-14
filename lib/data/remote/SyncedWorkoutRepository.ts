@@ -1,7 +1,12 @@
-import type { WorkoutRepository } from "../repositories";
+import { toDateKey } from "../../dates";
+import type {
+  LocalWorkoutRepository,
+  WorkoutRepository,
+} from "../repositories";
 import type { Workout, WorkoutExercise, WorkoutSet } from "../types";
 import {
   fetchWorkouts,
+  replaceWorkout,
   saveWorkout,
   updateWorkoutNote,
   type RemoteWorkout,
@@ -19,8 +24,11 @@ export class SyncedWorkoutRepository implements WorkoutRepository {
   private remoteSets = new Map<string, WorkoutSet[]>();
   private hasLoadedRemote = false;
   private refreshPromise: Promise<void> | null = null;
+  // Local workout id → backend id, so re-finishing an edited workout
+  // updates the existing row instead of creating a duplicate.
+  private syncedIds = new Map<string, string>();
 
-  constructor(private readonly local: WorkoutRepository) {}
+  constructor(private readonly local: LocalWorkoutRepository) {}
 
   private cacheRemote(workouts: RemoteWorkout[]): void {
     this.remoteWorkouts.clear();
@@ -125,13 +133,19 @@ export class SyncedWorkoutRepository implements WorkoutRepository {
 
     const finished = await this.local.finishWorkout(workoutId);
 
+    const payload = {
+      startedAt: finished.date,
+      finishedAt: finished.finishedAt ?? new Date().toISOString(),
+      note: finished.note,
+      exercises,
+    };
     try {
-      await saveWorkout({
-        startedAt: finished.date,
-        finishedAt: finished.finishedAt ?? new Date().toISOString(),
-        note: finished.note,
-        exercises,
-      });
+      const remoteId = this.syncedIds.get(workoutId);
+      if (remoteId) {
+        await replaceWorkout(remoteId, payload);
+      } else {
+        this.syncedIds.set(workoutId, await saveWorkout(payload));
+      }
     } catch (error) {
       // The local finish stands either way; the session just won't appear
       // in history until a future sync mechanism retries.
@@ -140,14 +154,54 @@ export class SyncedWorkoutRepository implements WorkoutRepository {
     return finished;
   }
 
+  async reopenWorkout(workoutId: string): Promise<Workout> {
+    // A synced workout has no local copy to edit (e.g. after an app
+    // restart), so import it into the live store with fresh ids and point
+    // the sync mapping at the existing backend row — finishing again then
+    // replaces it instead of duplicating.
+    const remote = this.remoteWorkouts.get(workoutId);
+    if (remote) {
+      const exercises = this.remoteExercises.get(workoutId) ?? [];
+      const sets = exercises.flatMap(
+        (exercise) => this.remoteSets.get(exercise.id) ?? [],
+      );
+      const localWorkout = await this.local.importWorkout(
+        { ...remote, finishedAt: null },
+        exercises,
+        sets,
+      );
+      this.syncedIds.set(localWorkout.id, workoutId);
+      return localWorkout;
+    }
+    // Otherwise it's a live local workout: the synced row (if any) keeps
+    // the previous version until the user finishes again.
+    return this.local.reopenWorkout(workoutId);
+  }
+
   // The rest is the live, unfinished session — purely local.
 
   getActiveWorkout(): Promise<Workout | null> {
     return this.local.getActiveWorkout();
   }
 
-  getWorkoutByDate(dateKey: string): Promise<Workout | null> {
-    return this.local.getWorkoutByDate(dateKey);
+  async getWorkoutByDate(dateKey: string): Promise<Workout | null> {
+    const local = await this.local.getWorkoutByDate(dateKey);
+    if (local) return local;
+
+    // After an app restart the live store is empty, but the day may already
+    // have a synced workout — surface the latest one so it can be edited.
+    if (!this.hasLoadedRemote) {
+      try {
+        await this.refreshRemote();
+      } catch (error) {
+        console.warn("Failed to load workouts for date:", error);
+        return null;
+      }
+    }
+    const matches = [...this.remoteWorkouts.values()]
+      .filter((workout) => toDateKey(new Date(workout.date)) === dateKey)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    return matches[0] ?? null;
   }
 
   startWorkout(): Promise<Workout> {

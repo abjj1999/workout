@@ -1,10 +1,23 @@
 import { toDateKey } from "../../dates";
-import type { ExerciseRepository, WorkoutRepository } from "../repositories";
+import {
+  friendlyExerciseName,
+  friendlyMuscleName,
+} from "../../exerciseNames";
+import type {
+  ExerciseRepository,
+  LocalWorkoutRepository,
+} from "../repositories";
 import type { Exercise, Workout, WorkoutExercise, WorkoutSet } from "../types";
 import exercisesJson from "./exercises.json";
 import { mockStore } from "./store";
 
-const exercises: Exercise[] = exercisesJson;
+// Normalize display names once at load; renames can merge synonyms, so
+// dedupe the muscle list afterwards.
+const exercises: Exercise[] = exercisesJson.map((exercise) => ({
+  ...exercise,
+  name: friendlyExerciseName(exercise.name),
+  subRegions: [...new Set(exercise.subRegions.map(friendlyMuscleName))],
+}));
 
 let idCounter = 0;
 const nextId = (prefix: string) => `${prefix}_live_${++idCounter}`;
@@ -34,7 +47,41 @@ export class MockExerciseRepository implements ExerciseRepository {
   }
 }
 
-export class MockWorkoutRepository implements WorkoutRepository {
+export class MockWorkoutRepository implements LocalWorkoutRepository {
+  async importWorkout(
+    workout: Workout,
+    exercises: WorkoutExercise[],
+    sets: WorkoutSet[],
+  ): Promise<Workout> {
+    // Fresh local ids everywhere so the copy can't collide with the ids of
+    // its remote source (reads would otherwise hit the stale remote cache).
+    const localWorkout: Workout = { ...workout, id: nextId("workout") };
+    const localExercises: WorkoutExercise[] = [];
+    const localSets: WorkoutSet[] = [];
+    for (const exercise of exercises) {
+      const localExercise: WorkoutExercise = {
+        ...exercise,
+        id: nextId("we"),
+        workoutId: localWorkout.id,
+      };
+      localExercises.push(localExercise);
+      for (const set of sets) {
+        if (set.workoutExerciseId !== exercise.id) continue;
+        localSets.push({
+          ...set,
+          id: nextId("set"),
+          workoutExerciseId: localExercise.id,
+        });
+      }
+    }
+    mockStore.setState((state) => ({
+      workouts: [...state.workouts, localWorkout],
+      workoutExercises: [...state.workoutExercises, ...localExercises],
+      sets: [...state.sets, ...localSets],
+    }));
+    return localWorkout;
+  }
+
   async getActiveWorkout(): Promise<Workout | null> {
     return (
       mockStore.getState().workouts.find((w) => w.finishedAt === null) ?? null
@@ -95,6 +142,17 @@ export class MockWorkoutRepository implements WorkoutRepository {
     mockStore.setState((state) => ({
       workouts: state.workouts.map((w) =>
         w.id === workoutId ? { ...w, finishedAt } : w,
+      ),
+    }));
+    const workout = await this.getById(workoutId);
+    if (!workout) throw new Error(`Workout not found: ${workoutId}`);
+    return workout;
+  }
+
+  async reopenWorkout(workoutId: string): Promise<Workout> {
+    mockStore.setState((state) => ({
+      workouts: state.workouts.map((w) =>
+        w.id === workoutId ? { ...w, finishedAt: null } : w,
       ),
     }));
     const workout = await this.getById(workoutId);
